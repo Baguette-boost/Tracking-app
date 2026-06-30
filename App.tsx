@@ -85,16 +85,6 @@ export default function App() {
 //             }
 //           };
         }, []);
-    return (
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'space-around' }}>
-          <Text>Your Expo push token: {expoPushToken}</Text>
-          <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-            <Text>Title: {notification && notification.request.content.title} </Text>
-            <Text>Body: {notification && notification.request.content.body}</Text>
-            <Text>Data: {notification && JSON.stringify(notification.request.content.data)}</Text>
-          </View>
-        </View>
-      );
 
   return (
     <SafeAreaProvider>
