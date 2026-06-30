@@ -12,6 +12,17 @@ npx expo start     # QR 코드로 Expo Go 또는 시뮬레이터 실행
 # npx expo start --ios / --android / --web
 ```
 
+## 푸시 알림 테스트
+
+```bash
+# Firebase 콘솔에서 패키지명에 맞는 google-services.json을 다운받아 프로젝트의 루트에 배치
+eas build --profile development --platform android  # 개발 빌드 생성. QR 코드로 스마트폰에 개발 빌드 앱 설치
+npx expo start --dev-client                         # 서버 실행. 스마트폰으로 QR 코드를 스캔하여 접속(PC와 스마트폰은 같은 와이파이(Wi-Fi)에 연결)
+
+# 터미널 로그에 생성된 ExponentPushToken[xxxx] 복사
+# https://expo.dev/notifications에서 푸시 알림 전송
+```
+
 ## 구현 범위
 
 - **홈 화면 (HomeScreen)** — 명세 §3, 픽셀 단위로 완성
