@@ -1,4 +1,15 @@
-{
+const fs = require('fs');
+const path = require('path');
+
+// EAS 빌드 서버 환경에서 secret을 읽어 파일로 복원하는 로직
+if (process.env.GOOGLE_SERVICES_BASE64) {
+  const filePath = path.resolve(__dirname, 'google-services.json');
+  if (!fs.existsSync(filePath)) {
+    fs.writeFileSync(filePath, Buffer.from(process.env.GOOGLE_SERVICES_BASE64, 'base64').toString('utf-8'));
+  }
+}
+
+module.exports = {
   "expo": {
     "name": "safetrack",
     "slug": "safetrack",
@@ -28,7 +39,12 @@
         "android.permission.BLUETOOTH",
         "android.permission.BLUETOOTH_ADMIN",
         "android.permission.BLUETOOTH_CONNECT"
-      ]
+      ],
+      "config": {
+        "googleMaps": {
+          "apiKey": process.env.GOOGLE_MAPS_API_KEY
+        }
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -56,4 +72,4 @@
       }
     }
   }
-}
+};
