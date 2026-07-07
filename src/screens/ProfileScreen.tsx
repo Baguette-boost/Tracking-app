@@ -2,21 +2,50 @@
 // 보호자 프로필 헤더 + 메뉴 리스트(각 항목 우측 chevron).
 
 import { Feather } from '@expo/vector-icons';
-import React from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import React, { useContext } from 'react';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { guardian } from '../data/mock';
+import { useGuardian } from '../hooks';
+import { RootStackParamList } from '../navigation/types';
+import { AuthContext } from '../state/auth';
 import { colors, radius, screenPadding, shadow } from '../theme/tokens';
 
-const menu: { icon: keyof typeof Feather.glyphMap; label: string; danger?: boolean }[] = [
-  { icon: 'users', label: '추적 대상 관리' },
-  { icon: 'shield', label: '안전구역 설정' },
-  { icon: 'bell', label: '알림 설정' },
-  { icon: 'lock', label: '계정/보안' },
-  { icon: 'log-out', label: '로그아웃', danger: true },
+type MenuItem = {
+  icon: keyof typeof Feather.glyphMap;
+  label: string;
+  danger?: boolean;
+  route?: keyof RootStackParamList;
+  disabled?: boolean; // 아직 미구현 -> 회색 비활성
+  action?: 'logout';
+};
+
+const menu: MenuItem[] = [
+  { icon: 'users', label: '추적 대상 관리', route: 'PersonsManage' },
+  { icon: 'shield', label: '안전구역 설정', disabled: true },
+  { icon: 'bell', label: '알림 설정', disabled: true },
+  { icon: 'lock', label: '계정/보안', disabled: true },
+  { icon: 'log-out', label: '로그아웃', danger: true, action: 'logout' },
 ];
 
 export default function ProfileScreen() {
+  const { data: guardian } = useGuardian();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { logout } = useContext(AuthContext);
+
+  const onPressItem = (m: MenuItem) => {
+    if (m.disabled) return;
+    if (m.action === 'logout') {
+      Alert.alert('로그아웃', '로그아웃 하시겠어요?', [
+        { text: '취소', style: 'cancel' },
+        { text: '로그아웃', style: 'destructive', onPress: logout },
+      ]);
+      return;
+    }
+    if (m.route) navigation.navigate(m.route);
+  };
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
@@ -27,11 +56,11 @@ export default function ProfileScreen() {
         {/* 프로필 헤더 */}
         <View style={styles.profile}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{guardian.name[0]}</Text>
+            <Text style={styles.avatarText}>{guardian?.name?.[0] ?? '-'}</Text>
           </View>
           <View>
-            <Text style={styles.name}>{guardian.name} 님</Text>
-            <Text style={styles.phone}>{formatPhone(guardian.phone)}</Text>
+            <Text style={styles.name}>{guardian?.name ?? '보호자'} 님</Text>
+            <Text style={styles.phone}>{guardian ? formatPhone(guardian.phone) : ''}</Text>
           </View>
         </View>
 
@@ -40,16 +69,40 @@ export default function ProfileScreen() {
           {menu.map((m, i) => (
             <Pressable
               key={m.label}
-              style={[styles.menuItem, i < menu.length - 1 && styles.menuDivider]}
+              style={[
+                styles.menuItem,
+                i < menu.length - 1 && styles.menuDivider,
+                m.disabled && styles.menuItemDisabled,
+              ]}
               accessibilityRole="button"
+              disabled={m.disabled}
+              onPress={() => onPressItem(m)}
             >
               <Feather
                 name={m.icon}
                 size={19}
-                color={m.danger ? colors.danger : colors.textPrimary}
+                color={
+                  m.disabled
+                    ? colors.textSecondary
+                    : m.danger
+                    ? colors.danger
+                    : colors.textPrimary
+                }
               />
-              <Text style={[styles.menuLabel, m.danger && styles.menuDanger]}>{m.label}</Text>
-              <Feather name="chevron-right" size={20} color={colors.textSecondary} />
+              <Text
+                style={[
+                  styles.menuLabel,
+                  m.danger && styles.menuDanger,
+                  m.disabled && styles.menuLabelDisabled,
+                ]}
+              >
+                {m.label}
+              </Text>
+              {m.disabled ? (
+                <Text style={styles.soon}>준비 중</Text>
+              ) : m.action === 'logout' ? null : (
+                <Feather name="chevron-right" size={20} color={colors.textSecondary} />
+              )}
             </Pressable>
           ))}
         </View>
@@ -109,6 +162,9 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   menuDivider: { borderBottomWidth: 1, borderBottomColor: colors.border },
+  menuItemDisabled: { opacity: 0.5 },
   menuLabel: { flex: 1, fontSize: 15, color: colors.textPrimary },
+  menuLabelDisabled: { color: colors.textSecondary },
   menuDanger: { color: colors.danger },
+  soon: { fontSize: 12, color: colors.textSecondary },
 });

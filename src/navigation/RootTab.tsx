@@ -4,8 +4,9 @@
 import { Feather } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import React from 'react';
+import { useEffect } from 'react';
 import { colors } from '../theme/tokens';
-import { unreadAlertCount } from '../data/mock';
+import { refreshUnread, useUnread } from '../state/unread';
 import AlertsScreen from '../screens/AlertsScreen';
 import HomeScreen from '../screens/HomeScreen';
 import MapScreen from '../screens/MapScreen';
@@ -22,6 +23,10 @@ const icons: Record<keyof RootTabParamList, keyof typeof Feather.glyphMap> = {
 };
 
 export default function RootTab() {
+  const unreadAlertCount = useUnread();
+  useEffect(() => {
+    refreshUnread();
+  }, []);
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({

@@ -1,6 +1,6 @@
 # SafeTrack
 
-치매 환자 · 아동 보호자용 위치/상태 추적 모바일 앱 (React Native / Expo).
+치매 환자/고령자 보호자용 위치/상태 추적 모바일 앱 (React Native / Expo).
 `design/design-spec.md` 명세를 구현한 결과물입니다.
 
 ## 실행

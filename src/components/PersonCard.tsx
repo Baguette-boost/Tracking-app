@@ -12,11 +12,10 @@ import StatusBadge from './StatusBadge';
 
 interface Props {
   person: TrackedPerson;
-  onCall: (person: TrackedPerson) => void;
   onLocate: (person: TrackedPerson) => void;
 }
 
-export default function PersonCard({ person, onCall, onLocate }: Props) {
+export default function PersonCard({ person, onLocate }: Props) {
   const offline = person.status === 'offline';
   const zoneAlert = !person.location.inSafeZone && person.status === 'alert';
 
@@ -55,21 +54,12 @@ export default function PersonCard({ person, onCall, onLocate }: Props) {
       <View style={styles.actions}>
         <Pressable
           style={({ pressed }) => [styles.btn, styles.btnFilled, pressed && styles.filledPressed]}
-          onPress={() => onCall(person)}
-          accessibilityRole="button"
-          accessibilityLabel={`${person.name}에게 전화`}
-        >
-          <Feather name="phone" size={17} color="#FFFFFF" />
-          <Text style={styles.btnFilledText}>전화</Text>
-        </Pressable>
-        <Pressable
-          style={({ pressed }) => [styles.btn, styles.btnOutline, pressed && styles.outlinePressed]}
           onPress={() => onLocate(person)}
           accessibilityRole="button"
           accessibilityLabel={`${person.name} 위치 보기`}
         >
-          <Feather name="map-pin" size={17} color={colors.textPrimary} />
-          <Text style={styles.btnOutlineText}>위치</Text>
+          <Feather name="map-pin" size={17} color="#FFFFFF" />
+          <Text style={styles.btnFilledText}>위치 보기</Text>
         </Pressable>
       </View>
     </View>

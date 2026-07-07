@@ -10,7 +10,7 @@ export interface TrackedPerson {
   status: SafetyStatus;
   location: {
     address: string; // "역삼로 24"
-    zoneLabel: string; // "안전구역 이탈" | "학교 내"
+    zoneLabel: string; // "안전구역 이탈" | "주간보호센터"
     inSafeZone: boolean;
     lat: number;
     lng: number;
@@ -19,6 +19,7 @@ export interface TrackedPerson {
   heartRate: number; // bpm
   steps: number;
   lastUpdated: string; // ISO; UI는 상대시간으로 표시
+  deviceToken?: string; // 서버 deviceToken (해제 시 BLE로 기기 찾는 데 사용)
 }
 
 export interface Guardian {
