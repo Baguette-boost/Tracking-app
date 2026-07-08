@@ -34,11 +34,13 @@ export default function PersonsManageScreen({ navigation }: Props) {
       await api.persons.remove(person.id);
       refetch();
       Alert.alert(
-        '해제 완료',
-        unpaired ? '기기 토큰 삭제 + 서버 삭제가 완료됐어요.' : '서버에서 삭제했어요.'
+        'Removed',
+        unpaired
+          ? 'The device token was deleted and the person was removed from the server.'
+          : 'Removed from the server.'
       );
     } catch (e: any) {
-      Alert.alert('삭제 실패', e?.message ?? '다시 시도해 주세요.');
+      Alert.alert('Delete Failed', e?.message ?? 'Please try again.');
     }
   };
 
@@ -53,11 +55,11 @@ export default function PersonsManageScreen({ navigation }: Props) {
         await unpairDevice(mac); // 기기 연결 + 토큰 삭제(write-ack 로 확인)
       } catch (e: any) {
         Alert.alert(
-          '기기 연동 해제 실패',
-          `${e?.message ?? '기기에 연결하지 못했어요.'}\n\n기기를 켜고 가까이 둔 뒤 다시 시도하거나, 서버에서만 삭제할 수 있어요.`,
+          'Device Unpairing Failed',
+          `${e?.message ?? 'Could not connect to the device.'}\n\nTurn the device on, keep it nearby, and try again — or delete it from the server only.`,
           [
-            { text: '취소', style: 'cancel' },
-            { text: '서버만 삭제', style: 'destructive', onPress: () => serverDelete(person, false) },
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Delete from Server Only', style: 'destructive', onPress: () => serverDelete(person, false) },
           ]
         );
         return;
@@ -68,11 +70,11 @@ export default function PersonsManageScreen({ navigation }: Props) {
 
   const confirmDelete = (person: TrackedPerson) => {
     Alert.alert(
-      '추적 대상 해제',
-      `${person.name} 님을 해제할까요?\n기기(블루투스)에서 토큰을 삭제한 뒤 서버에서 제거해요.`,
+      'Remove Tracked Person',
+      `Remove ${person.name}?\nThe token will be deleted from the device over Bluetooth, then the person will be removed from the server.`,
       [
-        { text: '취소', style: 'cancel' },
-        { text: '해제', style: 'destructive', onPress: () => attemptDelete(person) },
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Remove', style: 'destructive', onPress: () => attemptDelete(person) },
       ]
     );
   };
@@ -91,14 +93,14 @@ export default function PersonsManageScreen({ navigation }: Props) {
               <View style={styles.info}>
                 <Text style={styles.name}>{p.name}</Text>
                 <Text style={styles.sub}>
-                  {p.age}세 · {p.location.address}
+                  Age {p.age} · {p.location.address}
                 </Text>
               </View>
               <Pressable
                 style={styles.delete}
                 onPress={() => confirmDelete(p)}
                 accessibilityRole="button"
-                accessibilityLabel={`${p.name} 삭제`}
+                accessibilityLabel={`Delete ${p.name}`}
                 hitSlop={8}
               >
                 <Feather name="trash-2" size={20} color={colors.danger} />
@@ -107,11 +109,11 @@ export default function PersonsManageScreen({ navigation }: Props) {
           ))}
           {people.length === 0 && (
             <EmptyState
-              title="아직 등록되지 않았어요"
+              title="No one added yet"
               subtitle={
                 error
-                  ? `불러오기 실패 — ${error.message}`
-                  : '아래 ‘추적 대상 등록’으로 추가하세요.'
+                  ? `Failed to load — ${error.message}`
+                  : 'Tap “Add Tracked Person” below to get started.'
               }
             />
           )}
@@ -125,7 +127,7 @@ export default function PersonsManageScreen({ navigation }: Props) {
         accessibilityRole="button"
       >
         <Feather name="plus" size={20} color="#FFFFFF" />
-        <Text style={styles.addText}>추적 대상 등록</Text>
+        <Text style={styles.addText}>Add Tracked Person</Text>
       </Pressable>
     </View>
   );

@@ -26,7 +26,7 @@ export default function PersonCard({ person, onLocate }: Props) {
         <Avatar initial={person.avatarInitial} status={person.status} />
         <View style={styles.nameWrap}>
           <Text style={styles.name}>{person.name}</Text>
-          <Text style={styles.age}>{person.age}세</Text>
+          <Text style={styles.age}>Age {person.age}</Text>
         </View>
         <StatusBadge status={person.status} />
       </View>
@@ -56,10 +56,10 @@ export default function PersonCard({ person, onLocate }: Props) {
           style={({ pressed }) => [styles.btn, styles.btnFilled, pressed && styles.filledPressed]}
           onPress={() => onLocate(person)}
           accessibilityRole="button"
-          accessibilityLabel={`${person.name} 위치 보기`}
+          accessibilityLabel={`Locate ${person.name}`}
         >
           <Feather name="map-pin" size={17} color="#FFFFFF" />
-          <Text style={styles.btnFilledText}>위치 보기</Text>
+          <Text style={styles.btnFilledText}>Locate</Text>
         </Pressable>
       </View>
     </View>

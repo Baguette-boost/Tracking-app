@@ -95,7 +95,7 @@ export async function provisionPairing(
   deviceToken: string,
 ): Promise<void> {
   const ok = await ensureBlePermissions();
-  if (!ok) throw new Error('블루투스 권한이 없습니다.');
+  if (!ok) throw new Error('Bluetooth permission not granted.');
   const mgr = bleManager();
   const dev = await mgr.connectToDevice(bleId, { timeout: 8000 });
   try {
@@ -114,16 +114,16 @@ export async function provisionPairing(
  */
 export async function unpairDevice(deviceId: string): Promise<void> {
   const ok = await ensureBlePermissions();
-  if (!ok) throw new Error('블루투스 권한이 없습니다.');
+  if (!ok) throw new Error('Bluetooth permission not granted.');
   const mgr = bleManager();
   const state = await mgr.state();
-  if (state !== 'PoweredOn') throw new Error('블루투스를 켜주세요.');
+  if (state !== 'PoweredOn') throw new Error('Please turn on Bluetooth.');
 
   // 스캔으로 해당 deviceId 기기의 BLE 핸들 찾기 (최대 8초)
   const target: Device = await new Promise((resolve, reject) => {
     const timer = setTimeout(() => {
       mgr.stopDeviceScan();
-      reject(new Error('기기를 찾지 못했습니다 (꺼짐/멀리 있음)'));
+      reject(new Error('Device not found (powered off or out of range)'));
     }, 8000);
     mgr.startDeviceScan(null, { allowDuplicates: false }, (err: BleError | null, dev: Device | null) => {
       if (err) { clearTimeout(timer); mgr.stopDeviceScan(); reject(err); return; }
@@ -155,13 +155,13 @@ export async function scanTrackers(
 ): Promise<() => void> {
   const ok = await ensureBlePermissions();
   if (!ok) {
-    onError('블루투스 권한이 필요합니다. 설정에서 허용해 주세요.');
+    onError('Bluetooth permission is required. Please allow it in Settings.');
     return () => {};
   }
   const mgr = bleManager();
   const state = await mgr.state();
   if (state !== 'PoweredOn') {
-    onError('블루투스가 꺼져 있어요. 켠 뒤 다시 시도해 주세요.');
+    onError('Bluetooth is off. Please turn it on and try again.');
     return () => {};
   }
   mgr.startDeviceScan(null, { allowDuplicates: false }, (err: BleError | null, device: Device | null) => {

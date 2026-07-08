@@ -26,17 +26,17 @@ export default function RootStack() {
       <Stack.Screen
         name="PersonsManage"
         component={PersonsManageScreen}
-        options={{ title: '추적 대상 관리' }}
+        options={{ title: 'Manage Tracked People' }}
       />
       <Stack.Screen
         name="AddPerson"
         component={AddPersonScreen}
-        options={{ title: '추적 대상 등록', presentation: 'modal' }}
+        options={{ title: 'Add Tracked Person', presentation: 'modal' }}
       />
       <Stack.Screen
         name="DeviceScan"
         component={DeviceScanScreen}
-        options={{ title: '트래커 검색' }}
+        options={{ title: 'Scan for Tracker' }}
       />
     </Stack.Navigator>
   );

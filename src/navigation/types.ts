@@ -9,8 +9,8 @@ export type RootStackParamList = {
 };
 
 export type RootTabParamList = {
-  홈: undefined;
-  지도: { focusPersonId?: string } | undefined;
-  알림: undefined;
-  내정보: undefined;
+  Home: undefined;
+  Map: { focusPersonId?: string } | undefined;
+  Alerts: undefined;
+  Profile: undefined;
 };

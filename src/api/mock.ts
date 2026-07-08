@@ -34,7 +34,7 @@ let zoneStore: SafeZone[] = [
   {
     id: 'z1',
     personId: '2',
-    label: '주간보호센터',
+    label: 'Day Care Center',
     shape: 'circle',
     center: { lat: 37.503, lng: 127.044 },
     radius: 150,

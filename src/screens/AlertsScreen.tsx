@@ -31,10 +31,10 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 }
 
 const typeMeta: Record<AlertType, { icon: keyof typeof Feather.glyphMap; color: string; label: string }> = {
-  zone_exit: { icon: 'log-out', color: colors.danger, label: '안전구역 이탈' },
-  low_battery: { icon: 'battery', color: '#E2A100', label: '배터리 부족' },
-  abnormal_hr: { icon: 'heart', color: colors.danger, label: '심박 이상' },
-  offline: { icon: 'wifi-off', color: colors.textSecondary, label: '오프라인' },
+  zone_exit: { icon: 'log-out', color: colors.danger, label: 'Left Safe Zone' },
+  low_battery: { icon: 'battery', color: '#E2A100', label: 'Low Battery' },
+  abnormal_hr: { icon: 'heart', color: colors.danger, label: 'Abnormal Heart Rate' },
+  offline: { icon: 'wifi-off', color: colors.textSecondary, label: 'Offline' },
 };
 
 type Filter = 'unread' | 'all';
@@ -58,7 +58,7 @@ export default function AlertsScreen() {
   );
 
   const nameOf = (id: string) =>
-    persons.data?.find((p) => p.id === id)?.name ?? '알 수 없음';
+    persons.data?.find((p) => p.id === id)?.name ?? 'Unknown';
 
   const animate = () =>
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -85,16 +85,16 @@ export default function AlertsScreen() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
         <View style={styles.titleRow}>
-          <Text style={styles.title}>알림</Text>
+          <Text style={styles.title}>Alerts</Text>
           {filter === 'unread' && items.length > 0 && (
             <Pressable onPress={handleReadAll} accessibilityRole="button">
-              <Text style={styles.readAll}>모두 읽음</Text>
+              <Text style={styles.readAll}>Mark all read</Text>
             </Pressable>
           )}
         </View>
         <View style={styles.filters}>
-          <FilterChip label="미확인" active={filter === 'unread'} onPress={() => setFilter('unread')} />
-          <FilterChip label="전체" active={filter === 'all'} onPress={() => setFilter('all')} />
+          <FilterChip label="Unread" active={filter === 'unread'} onPress={() => setFilter('unread')} />
+          <FilterChip label="All" active={filter === 'all'} onPress={() => setFilter('all')} />
         </View>
       </View>
 
@@ -102,7 +102,7 @@ export default function AlertsScreen() {
         <LoadingView />
       ) : alerts.error ? (
         <ErrorView
-          message={`데이터를 불러오지 못했습니다.\n${alerts.error.message}`}
+          message={`Could not load data.\n${alerts.error.message}`}
           onRetry={alerts.refetch}
         />
       ) : (
@@ -117,7 +117,7 @@ export default function AlertsScreen() {
             <View style={styles.emptyWrap}>
               <Feather name="check-circle" size={36} color={colors.safe} />
               <Text style={styles.empty}>
-                {filter === 'unread' ? '확인하지 않은 알림이 없습니다.' : '알림이 없습니다.'}
+                {filter === 'unread' ? "You're all caught up." : 'No alerts yet.'}
               </Text>
             </View>
           )}
@@ -129,7 +129,7 @@ export default function AlertsScreen() {
                 style={[styles.item, !a.read && styles.itemUnread]}
                 onPress={() => handleRead(a)}
                 accessibilityRole="button"
-                accessibilityLabel={`${meta.label} 알림, 탭하면 확인 처리`}
+                accessibilityLabel={`${meta.label} alert, tap to mark as read`}
               >
                 {!a.read && <View style={styles.unreadBar} />}
                 <View style={[styles.iconWrap, { backgroundColor: meta.color + '1A' }]}>

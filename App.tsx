@@ -46,13 +46,13 @@ async function registerForPushNotificationsAsync() {
     finalStatus = (await Notifications.requestPermissionsAsync()).status;
   }
   if (finalStatus !== 'granted') {
-    console.log('[push] 알림 권한 거부됨');
+    console.log('[push] notification permission denied');
     return;
   }
 
   // iOS 무료 계정: 원격 푸시 토큰 발급 생략 (로컬 알림만 사용)
   if (Platform.OS === 'ios') {
-    console.log('[push] iOS 원격 푸시 비활성(무료 계정) — 로컬 알림만 사용');
+    console.log('[push] iOS remote push disabled (free account) — local notifications only');
     return;
   }
 
@@ -60,7 +60,7 @@ async function registerForPushNotificationsAsync() {
   if (!Device.isDevice) return;
   const projectId = Constants.expoConfig?.extra?.eas?.projectId;
   if (!projectId) {
-    console.log('[push] projectId 없음 — app.json extra.eas.projectId 확인');
+    console.log('[push] missing projectId — check app.json extra.eas.projectId');
     return;
   }
   try {
@@ -68,7 +68,7 @@ async function registerForPushNotificationsAsync() {
     console.log('[push] Expo push token:', token);
     return token;
   } catch (e) {
-    console.log('[push] 토큰 발급 실패:', e);
+    console.log('[push] failed to get push token:', e);
   }
 }
 

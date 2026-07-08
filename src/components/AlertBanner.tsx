@@ -14,19 +14,21 @@ interface Props {
 
 export default function AlertBanner({ count, names, onPress }: Props) {
   if (count < 1) return null;
-  const summary = `${names.join(' · ')} — 즉시 확인 필요`;
+  const summary = `${names.join(' · ')} — needs immediate attention`;
   return (
     <Pressable
       style={({ pressed }) => [styles.banner, pressed && styles.pressed]}
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`경보 ${count}건 발생. ${summary}`}
+      accessibilityLabel={`${count} active ${count === 1 ? 'alert' : 'alerts'}. ${summary}`}
     >
       <View style={styles.bicon}>
         <Feather name="alert-triangle" size={24} color="#FFFFFF" />
       </View>
       <View style={styles.btxt}>
-        <Text style={styles.bt1}>경보 {count}건 발생</Text>
+        <Text style={styles.bt1}>
+          {count} active {count === 1 ? 'alert' : 'alerts'}
+        </Text>
         <Text style={styles.bt2} numberOfLines={1}>
           {summary}
         </Text>

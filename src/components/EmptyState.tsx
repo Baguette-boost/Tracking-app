@@ -6,7 +6,7 @@ import { Image, StyleSheet, Text, View } from 'react-native';
 import { colors } from '../theme/tokens';
 
 export default function EmptyState({
-  title = '아직 등록되지 않았어요',
+  title = 'No one added yet',
   subtitle,
 }: {
   title?: string;

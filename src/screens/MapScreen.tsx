@@ -16,7 +16,7 @@ import { RootTabParamList } from '../navigation/types';
 import { colors, radius, screenPadding, shadow } from '../theme/tokens';
 import { TrackedPerson } from '../types';
 
-type Props = BottomTabScreenProps<RootTabParamList, '지도'>;
+type Props = BottomTabScreenProps<RootTabParamList, 'Map'>;
 
 // 네이티브 맵 모듈을 안전하게 로드(미설치/미지원 시 null)
 let MapView: any = null;
@@ -55,7 +55,7 @@ export default function MapScreen({ route }: Props) {
     return (
       <SafeAreaView style={styles.safe} edges={['top']}>
         <View style={styles.header}>
-          <Text style={styles.title}>지도</Text>
+          <Text style={styles.title}>Map</Text>
         </View>
         <LoadingView />
       </SafeAreaView>
@@ -80,16 +80,16 @@ export default function MapScreen({ route }: Props) {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
-        <Text style={styles.title}>지도</Text>
+        <Text style={styles.title}>Map</Text>
         {focusId && focusPerson && (
-          <Text style={styles.subtitle}>{focusPerson.name} 위치 포커스</Text>
+          <Text style={styles.subtitle}>Focused on {focusPerson.name}</Text>
         )}
       </View>
 
       {(error || validPeople.length === 0) && (
         <View style={styles.mapBanner} pointerEvents="none">
           <Text style={styles.mapBannerText}>
-            {error ? `위치 데이터를 불러오지 못했습니다 (${error.message})` : '표시할 위치가 아직 없어요'}
+            {error ? `Could not load location data (${error.message})` : 'No locations to show yet'}
           </Text>
         </View>
       )}
@@ -112,7 +112,7 @@ export default function MapScreen({ route }: Props) {
           <View style={styles.fallbackNotice}>
             <Feather name="map" size={20} color={colors.textSecondary} />
             <Text style={styles.fallbackText}>
-              이 환경에서는 지도를 표시할 수 없어 위치 목록으로 대체합니다.
+              The map is unavailable in this environment, so a location list is shown instead.
             </Text>
           </View>
           {people.map((p) => {

@@ -22,11 +22,11 @@ type MenuItem = {
 };
 
 const menu: MenuItem[] = [
-  { icon: 'users', label: '추적 대상 관리', route: 'PersonsManage' },
-  { icon: 'shield', label: '안전구역 설정', disabled: true },
-  { icon: 'bell', label: '알림 설정', disabled: true },
-  { icon: 'lock', label: '계정/보안', disabled: true },
-  { icon: 'log-out', label: '로그아웃', danger: true, action: 'logout' },
+  { icon: 'users', label: 'Manage Tracked People', route: 'PersonsManage' },
+  { icon: 'shield', label: 'Safe Zone Settings', disabled: true },
+  { icon: 'bell', label: 'Notification Settings', disabled: true },
+  { icon: 'lock', label: 'Account & Security', disabled: true },
+  { icon: 'log-out', label: 'Log Out', danger: true, action: 'logout' },
 ];
 
 export default function ProfileScreen() {
@@ -38,9 +38,9 @@ export default function ProfileScreen() {
   const onPressItem = (m: MenuItem) => {
     if (m.disabled) return;
     if (m.action === 'logout') {
-      Alert.alert('로그아웃', '로그아웃 하시겠어요?', [
-        { text: '취소', style: 'cancel' },
-        { text: '로그아웃', style: 'destructive', onPress: logout },
+      Alert.alert('Log Out', 'Are you sure you want to log out?', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Log Out', style: 'destructive', onPress: logout },
       ]);
       return;
     }
@@ -49,7 +49,7 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
-        <Text style={styles.title}>내정보</Text>
+        <Text style={styles.title}>Profile</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
@@ -59,7 +59,7 @@ export default function ProfileScreen() {
             <Text style={styles.avatarText}>{guardian?.name?.[0] ?? '-'}</Text>
           </View>
           <View>
-            <Text style={styles.name}>{guardian?.name ?? '보호자'} 님</Text>
+            <Text style={styles.name}>{guardian?.name ?? 'Guardian'}</Text>
             <Text style={styles.phone}>{guardian ? formatPhone(guardian.phone) : ''}</Text>
           </View>
         </View>
@@ -99,7 +99,7 @@ export default function ProfileScreen() {
                 {m.label}
               </Text>
               {m.disabled ? (
-                <Text style={styles.soon}>준비 중</Text>
+                <Text style={styles.soon}>Coming soon</Text>
               ) : m.action === 'logout' ? null : (
                 <Feather name="chevron-right" size={20} color={colors.textSecondary} />
               )}

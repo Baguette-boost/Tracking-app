@@ -16,10 +16,10 @@ import { RootTabParamList } from './types';
 const Tab = createBottomTabNavigator<RootTabParamList>();
 
 const icons: Record<keyof RootTabParamList, keyof typeof Feather.glyphMap> = {
-  홈: 'home',
-  지도: 'map',
-  알림: 'bell',
-  내정보: 'user',
+  Home: 'home',
+  Map: 'map',
+  Alerts: 'bell',
+  Profile: 'user',
 };
 
 export default function RootTab() {
@@ -43,14 +43,14 @@ export default function RootTab() {
         ),
       })}
     >
-      <Tab.Screen name="홈" component={HomeScreen} />
-      <Tab.Screen name="지도" component={MapScreen} />
+      <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen name="Map" component={MapScreen} />
       <Tab.Screen
-        name="알림"
+        name="Alerts"
         component={AlertsScreen}
         options={{ tabBarBadge: unreadAlertCount > 0 ? unreadAlertCount : undefined }}
       />
-      <Tab.Screen name="내정보" component={ProfileScreen} />
+      <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
 }

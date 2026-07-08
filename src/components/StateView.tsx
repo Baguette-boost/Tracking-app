@@ -5,7 +5,7 @@ import React from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors } from '../theme/tokens';
 
-export function LoadingView({ label = '불러오는 중…' }: { label?: string }) {
+export function LoadingView({ label = 'Loading…' }: { label?: string }) {
   return (
     <View style={styles.center}>
       <ActivityIndicator color={colors.primary} size="large" />
@@ -15,7 +15,7 @@ export function LoadingView({ label = '불러오는 중…' }: { label?: string 
 }
 
 export function ErrorView({
-  message = '데이터를 불러오지 못했습니다.',
+  message = "Couldn't load data.",
   onRetry,
 }: {
   message?: string;
@@ -28,7 +28,7 @@ export function ErrorView({
       {onRetry && (
         <Pressable style={styles.retry} onPress={onRetry} accessibilityRole="button">
           <Feather name="refresh-cw" size={16} color="#FFFFFF" />
-          <Text style={styles.retryText}>다시 시도</Text>
+          <Text style={styles.retryText}>Retry</Text>
         </Pressable>
       )}
     </View>

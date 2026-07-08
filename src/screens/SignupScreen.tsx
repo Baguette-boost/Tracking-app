@@ -60,7 +60,7 @@ export default function SignupScreen({
       });
       onSuccess(); // 서버가 토큰을 반환 -> 바로 로그인 상태로 진입
     } catch (e: any) {
-      setError(`회원가입 실패 — ${e?.message ?? '잠시 후 다시 시도해 주세요.'}`);
+      setError(`Sign up failed — ${e?.message ?? 'Please try again later.'}`);
     } finally {
       setSubmitting(false);
     }
@@ -74,21 +74,21 @@ export default function SignupScreen({
       <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
         <View style={styles.brand}>
           <Ionicons name="person-add" size={40} color={colors.primary} />
-          <Text style={styles.title}>회원가입</Text>
-          <Text style={styles.sub}>보호자 계정 만들기</Text>
+          <Text style={styles.title}>Sign Up</Text>
+          <Text style={styles.sub}>Create a Guardian account</Text>
         </View>
 
-        <Field label="이름">
+        <Field label="Name">
           <TextInput
             style={styles.input}
             value={name}
             onChangeText={setName}
-            placeholder="예: 김보호자"
+            placeholder="e.g. John Doe"
             placeholderTextColor={colors.textSecondary}
           />
         </Field>
 
-        <Field label="전화번호">
+        <Field label="Phone Number">
           <TextInput
             style={styles.input}
             value={phone}
@@ -99,28 +99,28 @@ export default function SignupScreen({
           />
         </Field>
 
-        <Field label="비밀번호" hint="8자 이상">
+        <Field label="Password" hint="At least 8 characters">
           <TextInput
             style={styles.input}
             value={password}
             onChangeText={setPassword}
-            placeholder="비밀번호"
+            placeholder="Password"
             placeholderTextColor={colors.textSecondary}
             secureTextEntry
           />
         </Field>
 
-        <Field label="비밀번호 확인">
+        <Field label="Confirm Password">
           <TextInput
             style={styles.input}
             value={password2}
             onChangeText={setPassword2}
-            placeholder="비밀번호 다시 입력"
+            placeholder="Re-enter password"
             placeholderTextColor={colors.textSecondary}
             secureTextEntry
           />
           {password2.length > 0 && password !== password2 && (
-            <Text style={styles.error}>비밀번호가 일치하지 않습니다.</Text>
+            <Text style={styles.error}>Passwords do not match.</Text>
           )}
         </Field>
 
@@ -135,12 +135,12 @@ export default function SignupScreen({
           {submitting ? (
             <ActivityIndicator color="#FFFFFF" />
           ) : (
-            <Text style={styles.submitText}>회원가입</Text>
+            <Text style={styles.submitText}>Sign Up</Text>
           )}
         </Pressable>
 
         <Pressable onPress={onCancel} style={styles.link} accessibilityRole="button">
-          <Text style={styles.linkText}>이미 계정이 있어요 — 로그인</Text>
+          <Text style={styles.linkText}>Already have an account? Log In</Text>
         </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>

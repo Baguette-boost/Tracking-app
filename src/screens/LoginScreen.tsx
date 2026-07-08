@@ -46,7 +46,7 @@ export default function LoginScreen({
       await api.auth.login({ phone: formatPhone(phone), password });
       onSuccess();
     } catch (e: any) {
-      setError(`로그인 실패 — ${e?.message ?? '전화번호/비밀번호를 확인해 주세요.'}`);
+      setError(`Log in failed — ${e?.message ?? 'Check your phone number and password.'}`);
     } finally {
       setSubmitting(false);
     }
@@ -61,11 +61,11 @@ export default function LoginScreen({
         <View style={styles.brand}>
           <Ionicons name="shield-checkmark" size={44} color={colors.primary} />
           <Text style={styles.title}>SafeTrack</Text>
-          <Text style={styles.sub}>보호자 로그인</Text>
+          <Text style={styles.sub}>Guardian Log In</Text>
         </View>
 
         <View style={styles.field}>
-          <Text style={styles.label}>전화번호</Text>
+          <Text style={styles.label}>Phone Number</Text>
           <TextInput
             style={styles.input}
             value={phone}
@@ -78,12 +78,12 @@ export default function LoginScreen({
         </View>
 
         <View style={styles.field}>
-          <Text style={styles.label}>비밀번호</Text>
+          <Text style={styles.label}>Password</Text>
           <TextInput
             style={styles.input}
             value={password}
             onChangeText={setPassword}
-            placeholder="비밀번호"
+            placeholder="Password"
             placeholderTextColor={colors.textSecondary}
             secureTextEntry
           />
@@ -100,13 +100,13 @@ export default function LoginScreen({
           {submitting ? (
             <ActivityIndicator color="#FFFFFF" />
           ) : (
-            <Text style={styles.submitText}>로그인</Text>
+            <Text style={styles.submitText}>Log In</Text>
           )}
         </Pressable>
 
         {onSignup && (
           <Pressable onPress={onSignup} style={styles.link} accessibilityRole="button">
-            <Text style={styles.linkText}>계정이 없어요 — 회원가입</Text>
+            <Text style={styles.linkText}>Don’t have an account? Sign Up</Text>
           </Pressable>
         )}
       </View>

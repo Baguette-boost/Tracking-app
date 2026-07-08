@@ -11,9 +11,9 @@ interface Props {
 }
 
 const config: Record<SafetyStatus, { bg: string; fg: string; label: string }> = {
-  safe: { bg: colors.safeBg, fg: colors.safe, label: '안전' },
-  alert: { bg: colors.dangerBg, fg: colors.dangerText, label: '경보' },
-  offline: { bg: colors.border, fg: colors.textSecondary, label: '오프라인' },
+  safe: { bg: colors.safeBg, fg: colors.safe, label: 'Safe' },
+  alert: { bg: colors.dangerBg, fg: colors.dangerText, label: 'Alert' },
+  offline: { bg: colors.border, fg: colors.textSecondary, label: 'Offline' },
 };
 
 export default function StatusBadge({ status }: Props) {

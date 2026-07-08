@@ -86,7 +86,7 @@ function toLocationDto(l: BE_Location): LocationDto {
   };
 }
 
-const notSupported = (what: string) => Promise.reject(new Error(`서버 미지원: ${what}`));
+const notSupported = (what: string) => Promise.reject(new Error(`Not supported by the server: ${what}`));
 
 // 로그인 시 /me 에서 받아두는 보호자 ID (등록 시 guardian_id 로 필요)
 let cachedGuardianId: number | null = null;
@@ -108,14 +108,14 @@ export const backendApi = {
       // 서버 필드명 변형(accessToken / access_token / token) 모두 대응
       const token: string | undefined =
         tok?.accessToken ?? tok?.access_token ?? tok?.token ?? tok?.data?.accessToken;
-      console.log('[auth] login 응답:', JSON.stringify(tok));
+      console.log('[auth] login response:', JSON.stringify(tok));
       if (!token) {
-        throw new Error(`로그인 응답에 토큰이 없습니다: ${JSON.stringify(tok)}`);
+        throw new Error(`Login response did not include a token: ${JSON.stringify(tok)}`);
       }
       setAccessToken(token);
-      console.log('[auth] 토큰 적용됨 (길이 ' + token.length + ')');
+      console.log('[auth] token applied (length ' + token.length + ')');
       // 보호자 프로필 (스키마 유동적 -> 방어적 매핑)
-      let guardian: Guardian = { id: '0', name: '보호자', phone: body.phone };
+      let guardian: Guardian = { id: '0', name: 'Guardian', phone: body.phone };
       try {
         const me = await http.get<any>('/me');
         const gid = Number(me?.id ?? me?.guardianId ?? me?.guardian_id);
@@ -123,7 +123,7 @@ export const backendApi = {
         console.log('[auth] guardianId =', cachedGuardianId, '| /me =', JSON.stringify(me));
         guardian = {
           id: String(me?.id ?? me?.guardianId ?? '0'),
-          name: me?.name ?? '보호자',
+          name: me?.name ?? 'Guardian',
           phone: me?.phone ?? body.phone,
         };
       } catch {
@@ -140,14 +140,14 @@ export const backendApi = {
         expo_token: body.expoToken ?? '', // 서버 필수 필드 (무료 iOS 계정은 빈 값)
       };
       const tok = await http.post<any>('/auth/signup', payload);
-      console.log('[auth] signup 응답:', JSON.stringify(tok));
+      console.log('[auth] signup response:', JSON.stringify(tok));
       const token: string | undefined =
         tok?.accessToken ?? tok?.access_token ?? tok?.token ?? tok?.data?.accessToken;
       if (!token) {
-        throw new Error(`회원가입 응답에 토큰이 없습니다: ${JSON.stringify(tok)}`);
+        throw new Error(`Sign-up response did not include a token: ${JSON.stringify(tok)}`);
       }
       setAccessToken(token);
-      console.log('[auth] 회원가입 후 토큰 적용됨 (길이 ' + token.length + ')');
+      console.log('[auth] token applied after sign-up (length ' + token.length + ')');
       let guardian: Guardian = { id: '0', name: body.name, phone: body.phone };
       try {
         const me = await http.get<any>('/me');
@@ -163,7 +163,7 @@ export const backendApi = {
       }
       return { accessToken: token, refreshToken: tok?.refresh_token ?? '', guardian };
     },
-    refresh: () => notSupported('토큰 리프레시'),
+    refresh: () => notSupported('token refresh'),
     logout: async () => {
       setAccessToken(null);
     },
@@ -176,11 +176,11 @@ export const backendApi = {
       const me = await http.get<any>('/me');
       return {
         id: String(me?.id ?? '0'),
-        name: me?.name ?? '보호자',
+        name: me?.name ?? 'Guardian',
         phone: me?.phone ?? '',
       };
     },
-    update: () => notSupported('보호자 정보 수정'),
+    update: () => notSupported('updating guardian profile'),
     getSettings: (): Promise<GuardianSettings> =>
       Promise.resolve({
         pushEnabled: true,
@@ -188,7 +188,7 @@ export const backendApi = {
         lowBatteryAlert: true,
         abnormalHrAlert: true,
       }),
-    updateSettings: () => notSupported('알림 설정 수정'),
+    updateSettings: () => notSupported('updating notification settings'),
   },
 
   // 3. 추적 대상
@@ -209,10 +209,10 @@ export const backendApi = {
       try {
         const existing = await http.get<BE_Person[]>('/persons');
         if (existing.some((p) => p.deviceToken === dupToken)) {
-          throw new Error('이미 등록된 디바이스입니다.');
+          throw new Error('This device is already registered.');
         }
       } catch (e: any) {
-        if (e?.message === '이미 등록된 디바이스입니다.') throw e;
+        if (e?.message === 'This device is already registered.') throw e;
         // 목록 조회 실패는 무시하고 등록 시도 (서버가 최종 판단)
       }
       // 서버(런타임 422 기준)가 요구하는 전체 필드 채워 전송.
@@ -233,7 +233,7 @@ export const backendApi = {
       lastRegistration = { personId: created.id, deviceToken: created.deviceToken };
       return toPerson(created);
     },
-    update: (_id: string, _body: UpdatePersonRequest) => notSupported('대상 수정'),
+    update: (_id: string, _body: UpdatePersonRequest) => notSupported('updating a person'),
     // 문서엔 없지만 서버에 있을 수 있어 실제로 호출 시도 (없으면 404/405)
     remove: (id: string) => http.delete<void>(`/persons/${id}`),
   },
@@ -256,9 +256,9 @@ export const backendApi = {
   // 5. 안전구역 (서버 미구현 -> 빈 목록)
   zones: {
     list: (_personId: string): Promise<SafeZone[]> => Promise.resolve([]),
-    create: (_personId: string, _body: CreateZoneRequest) => notSupported('안전구역 생성'),
-    update: (_zoneId: string, _body: Partial<CreateZoneRequest>) => notSupported('안전구역 수정'),
-    remove: (_zoneId: string) => notSupported('안전구역 삭제'),
+    create: (_personId: string, _body: CreateZoneRequest) => notSupported('creating a safe zone'),
+    update: (_zoneId: string, _body: Partial<CreateZoneRequest>) => notSupported('updating a safe zone'),
+    remove: (_zoneId: string) => notSupported('deleting a safe zone'),
   },
 
   // 6. 알림 (서버 목록 API 없음 -> 빈 응답. 실시간은 WebSocket/푸시로)
@@ -266,7 +266,7 @@ export const backendApi = {
     list: (_query: AlertQuery = {}): Promise<AlertListResponse> =>
       Promise.resolve({ items: [], nextCursor: undefined }),
     unreadCount: (): Promise<{ count: number }> => Promise.resolve({ count: 0 }),
-    markRead: () => notSupported('알림 읽음'),
+    markRead: () => notSupported('marking an alert as read'),
     markAllRead: async () => {},
   },
 

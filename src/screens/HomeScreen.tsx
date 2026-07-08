@@ -25,7 +25,7 @@ import { RootTabParamList } from '../navigation/types';
 import { colors, screenPadding } from '../theme/tokens';
 import { TrackedPerson } from '../types';
 
-type Props = BottomTabScreenProps<RootTabParamList, '홈'>;
+type Props = BottomTabScreenProps<RootTabParamList, 'Home'>;
 
 export default function HomeScreen({ navigation }: Props) {
   const guardian = useGuardian();
@@ -49,7 +49,7 @@ export default function HomeScreen({ navigation }: Props) {
   const alertNames = people.filter((p) => p.status === 'alert').map((p) => p.name);
 
   const handleLocate = (person: TrackedPerson) => {
-    navigation.navigate('지도', { focusPersonId: person.id });
+    navigation.navigate('Map', { focusPersonId: person.id });
   };
 
   return (
@@ -57,14 +57,14 @@ export default function HomeScreen({ navigation }: Props) {
       {/* 3.1 헤더 (고정) */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.greet}>안녕하세요,</Text>
-          <Text style={styles.name}>{(guardian.data?.name ?? '보호자')} 님 👋</Text>
+          <Text style={styles.greet}>Hello,</Text>
+          <Text style={styles.name}>{(guardian.data?.name ?? 'Guardian')} 👋</Text>
         </View>
         <Pressable
           style={styles.bell}
-          onPress={() => navigation.navigate('알림')}
+          onPress={() => navigation.navigate('Alerts')}
           accessibilityRole="button"
-          accessibilityLabel="알림 보기"
+          accessibilityLabel="View alerts"
         >
           <Feather name="bell" size={22} color={colors.textPrimary} />
           {unreadCount > 0 && <View style={styles.bellDot} />}
@@ -87,22 +87,22 @@ export default function HomeScreen({ navigation }: Props) {
               icon="shield"
               iconColor={colors.primary}
               bg={colors.infoBg}
-              value={`${summary.totalCount}명`}
-              label="총 추적 인원"
+              value={`${summary.totalCount}`}
+              label="Tracked People"
             />
             <SummaryCard
               icon="target"
               iconColor={colors.safe}
               bg={colors.safeBg}
-              value={`${summary.safeCount}명`}
-              label="안전 상태"
+              value={`${summary.safeCount}`}
+              label="Safe"
             />
             <SummaryCard
               icon="alert-triangle"
               iconColor={colors.danger}
               bg={colors.dangerBg}
-              value={`${summary.alertCount}건`}
-              label="활성 경보"
+              value={`${summary.alertCount}`}
+              label="Active Alerts"
             />
           </View>
 
@@ -110,25 +110,25 @@ export default function HomeScreen({ navigation }: Props) {
           <AlertBanner
             count={summary.alertCount}
             names={alertNames}
-            onPress={() => navigation.navigate('알림')}
+            onPress={() => navigation.navigate('Alerts')}
           />
 
           {/* 3.4 섹션 헤더 */}
           <View style={styles.sechead}>
-            <Text style={styles.sectitle}>추적 중인 가족</Text>
-            <Pressable onPress={() => navigation.navigate('지도')} accessibilityRole="button">
-              <Text style={styles.seclink}>지도 보기 →</Text>
+            <Text style={styles.sectitle}>Tracked Family</Text>
+            <Pressable onPress={() => navigation.navigate('Map')} accessibilityRole="button">
+              <Text style={styles.seclink}>View Map →</Text>
             </Pressable>
           </View>
 
           {/* 3.5 가족 카드 리스트 (없으면 빈 상태) */}
           {people.length === 0 ? (
             <EmptyState
-              title="아직 등록되지 않았어요"
+              title="No one is registered yet"
               subtitle={
                 persons.error
-                  ? `불러오기 실패 — ${persons.error.message}`
-                  : '‘내정보 → 추적 대상 관리’에서 등록하세요.'
+                  ? `Failed to load — ${persons.error.message}`
+                  : 'Add someone in Profile → Manage Tracked People.'
               }
             />
           ) : (

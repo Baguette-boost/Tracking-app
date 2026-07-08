@@ -61,23 +61,23 @@ export default function AddPersonScreen({ navigation }: Props) {
 
       // 3) 결과 안내
       if (provisioned) {
-        Alert.alert('등록 완료', '등록이 완료되었습니다.\n기기에 정상적으로 연동되었어요.', [
-          { text: '확인', onPress: () => navigation.goBack() },
+        Alert.alert('Registration Complete', 'Registration complete.\nThe device was paired successfully.', [
+          { text: 'OK', onPress: () => navigation.goBack() },
         ]);
       } else if (bleId) {
         Alert.alert(
-          '등록됨 (기기 연동 실패)',
-          '서버 등록은 완료됐지만 기기에 토큰 전달을 못 했어요.\n기기를 켜고 가까이 둔 뒤 다시 시도해 주세요.',
-          [{ text: '확인', onPress: () => navigation.goBack() }]
+          'Registered (Device Pairing Failed)',
+          'Registered on the server, but the token could not be delivered to the device.\nTurn the device on, keep it nearby, and try again.',
+          [{ text: 'OK', onPress: () => navigation.goBack() }]
         );
       } else {
         // BLE 검색 없이 수동 입력한 경우 — 서버 등록만
-        Alert.alert('등록 완료', '등록이 완료되었습니다.', [
-          { text: '확인', onPress: () => navigation.goBack() },
+        Alert.alert('Registration Complete', 'Registration complete.', [
+          { text: 'OK', onPress: () => navigation.goBack() },
         ]);
       }
     } catch (e: any) {
-      Alert.alert('등록 실패', e?.message ?? '추적 대상을 등록하지 못했습니다. 다시 시도해 주세요.');
+      Alert.alert('Registration Failed', e?.message ?? 'Could not add the tracked person. Please try again.');
     } finally {
       setSubmitting(false);
     }
@@ -89,35 +89,35 @@ export default function AddPersonScreen({ navigation }: Props) {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
-        <Field label="이름">
+        <Field label="Name">
           <TextInput
             style={styles.input}
             value={name}
             onChangeText={setName}
-            placeholder="예: 김순자"
+            placeholder="e.g. Jane Doe"
             placeholderTextColor={colors.textSecondary}
             returnKeyType="next"
           />
         </Field>
 
-        <Field label="나이">
+        <Field label="Age">
           <TextInput
             style={styles.input}
             value={age}
             onChangeText={(t) => setAge(t.replace(/[^0-9]/g, ''))}
-            placeholder="예: 78"
+            placeholder="e.g. 78"
             placeholderTextColor={colors.textSecondary}
             keyboardType="number-pad"
             maxLength={3}
           />
         </Field>
 
-        <Field label="기기 ID" hint="트래커를 검색해 자동 입력하거나 직접 입력하세요">
+        <Field label="Device ID" hint="Scan for a tracker to fill this in automatically, or enter it manually">
           <TextInput
             style={styles.input}
             value={deviceId}
             onChangeText={setDeviceId}
-            placeholder="예: SAFETRACK 검색 또는 직접 입력"
+            placeholder="e.g. scan for SAFETRACK or enter manually"
             placeholderTextColor={colors.textSecondary}
             autoCapitalize="characters"
           />
@@ -133,7 +133,7 @@ export default function AddPersonScreen({ navigation }: Props) {
             accessibilityRole="button"
           >
             <Ionicons name="bluetooth" size={18} color={colors.primary} />
-            <Text style={styles.scanBtnText}>트래커 검색 (블루투스)</Text>
+            <Text style={styles.scanBtnText}>Scan for Tracker (Bluetooth)</Text>
           </Pressable>
         </Field>
 
@@ -146,7 +146,7 @@ export default function AddPersonScreen({ navigation }: Props) {
           {submitting ? (
             <ActivityIndicator color="#FFFFFF" />
           ) : (
-            <Text style={styles.submitText}>등록하기</Text>
+            <Text style={styles.submitText}>Add</Text>
           )}
         </Pressable>
       </ScrollView>

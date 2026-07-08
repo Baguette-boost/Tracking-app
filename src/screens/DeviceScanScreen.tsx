@@ -58,9 +58,9 @@ export default function DeviceScanScreen({ navigation }: Props) {
   return (
     <View style={styles.flex}>
       <View style={styles.header}>
-        <Text style={styles.title}>근처 트래커 검색</Text>
+        <Text style={styles.title}>Scan for Nearby Trackers</Text>
         <Text style={styles.sub}>
-          {scanning ? '검색 중…' : '검색 중지됨'} · 기기 전원을 켜고 가까이 두세요
+          {scanning ? 'Scanning…' : 'Scan stopped'} · Turn the device on and keep it nearby
         </Text>
       </View>
 
@@ -68,7 +68,7 @@ export default function DeviceScanScreen({ navigation }: Props) {
         <View style={styles.errBox}>
           <Text style={styles.errText}>{error}</Text>
           <Pressable onPress={start} style={styles.retry} accessibilityRole="button">
-            <Text style={styles.retryText}>다시 시도</Text>
+            <Text style={styles.retryText}>Try Again</Text>
           </Pressable>
         </View>
       )}
@@ -91,7 +91,7 @@ export default function DeviceScanScreen({ navigation }: Props) {
           !error ? (
             <View style={styles.empty}>
               <ActivityIndicator color={colors.primary} />
-              <Text style={styles.emptyText}>SAFETRACK 기기를 찾는 중…</Text>
+              <Text style={styles.emptyText}>Looking for SAFETRACK devices…</Text>
             </View>
           ) : null
         }
