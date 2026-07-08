@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 // EAS 빌드 서버 환경에서 secret을 읽어 파일로 복원하는 로직
-if (process.env.GOOGLE_SERVICES_BASE64) {
+if (process.env.GOOGLE_SERVICES_BASE64 && process.env.GOOGLE_SERVICES_BASE64.trim() !== '') {
   const filePath = path.resolve(__dirname, 'google-services.json');
   if (!fs.existsSync(filePath)) {
     fs.writeFileSync(filePath, Buffer.from(process.env.GOOGLE_SERVICES_BASE64, 'base64').toString('utf-8'));
@@ -34,7 +34,10 @@ module.exports = {
         "foregroundImage": "./assets/android-icon-foreground.png"
       },
       "predictiveBackGestureEnabled": false,
-      "googleServicesFile": "./google-services.json",
+
+      ...(fs.existsSync(path.resolve(__dirname, 'google-services.json')) ? {
+              "googleServicesFile": "./google-services.json"
+            } : {}),
       "permissions": [
         "android.permission.BLUETOOTH",
         "android.permission.BLUETOOTH_ADMIN",
@@ -42,7 +45,7 @@ module.exports = {
       ],
       "config": {
         "googleMaps": {
-          "apiKey": process.env.GOOGLE_MAPS_API_KEY
+          "apiKey": process.env.GOOGLE_MAPS_API_KEY || "LOCAL_DEVELOPMENT_KEY"
         }
       }
     },
