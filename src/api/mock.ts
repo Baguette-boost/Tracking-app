@@ -28,7 +28,14 @@ import {
 
 // --- 인메모리 스토어 (목업 동작 중 변경 반영) ---
 let guardianStore: Guardian = { ...seedGuardian };
-let personStore: TrackedPerson[] = seedPeople.map((p) => ({ ...p }));
+// 목업 데모: 경보 대상을 배회/낙상 번갈아 표시해 지도 색상 구분을 확인
+let personStore: TrackedPerson[] = seedPeople.map((p, i) => ({
+  ...p,
+  flags:
+    p.status === 'alert'
+      ? { isFall: i % 2 === 1, isWandering: i % 2 === 0 }
+      : { isFall: false, isWandering: false },
+}));
 let alertStore: AlertItem[] = seedAlerts.map((a) => ({ ...a }));
 let zoneStore: SafeZone[] = [
   {
@@ -110,6 +117,7 @@ export const mockApi = {
         heartRate: 80,
         steps: 0,
         lastUpdated: '2026-06-19T09:42:00+09:00',
+        phone: body.phone || undefined,
       };
       personStore = [...personStore, person];
       return delay(clone(person), 400);

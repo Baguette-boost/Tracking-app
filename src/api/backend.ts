@@ -10,7 +10,7 @@
 //   GET  /persons/{id}/location -> LocationResponse
 //   GET  /persons/{id}/history?from&to -> {history:[{latitude,longitude,updatedAt}]}
 
-import { Guardian, TrackedPerson } from '../types';
+import { AlertItem, AlertType, Guardian, TrackedPerson } from '../types';
 import {
   AlertListResponse,
   AlertQuery,
@@ -28,7 +28,7 @@ import {
   TelemetryDto,
   UpdatePersonRequest,
 } from './dto';
-import { http, setAccessToken } from './http';
+import { http, HttpError, setAccessToken } from './http';
 
 // ---- 서버 응답 타입 ----
 interface BE_Person {
@@ -38,18 +38,19 @@ interface BE_Person {
   deviceId: string;
   deviceToken: string;
   createdAt: string;
+  phoneNumber?: string | null; // 서버 응답 필드명은 phoneNumber (camelCase)
 }
 interface BE_LocationAbstract {
   latitude: number;
   longitude: number;
-  updatedAt: string;
+  updatedAt?: string; // 서버가 아직 안 내려줌
 }
+// GET /persons/{id}/location — 평평한 구조. address/zone/updatedAt 은 서버에 없음.
 interface BE_Location {
-  address: string;
-  zoneLabel: string;
-  inSafeZone: boolean;
-  isFallConfirmed: boolean;
-  abstract: BE_LocationAbstract;
+  latitude: number;
+  longitude: number;
+  is_fall: boolean;
+  is_wandering: boolean;
 }
 interface BE_History {
   history: BE_LocationAbstract[];
@@ -57,6 +58,42 @@ interface BE_History {
 interface BE_Token {
   accessToken: string;
   tokenType?: string;
+}
+// GET /alerts -> AlertResponse[]
+interface BE_Alert {
+  id: number;
+  person_id: number;
+  alertType: string; // "wandering" | "fall_detected" | "offline"
+  message: string;
+  is_read: boolean;
+  createdAt: string;
+}
+interface BE_UnreadCount {
+  unread_count: number;
+}
+
+// 서버 alertType 문자열 -> 앱 AlertType
+function toAlertType(t: string): AlertType {
+  switch (t) {
+    case 'wandering':
+      return 'wandering';
+    case 'fall_detected':
+      return 'fall_detected';
+    case 'offline':
+      return 'offline';
+    default:
+      return 'offline';
+  }
+}
+function toAlertItem(a: BE_Alert): AlertItem {
+  return {
+    id: String(a.id),
+    personId: String(a.person_id),
+    type: toAlertType(a.alertType),
+    message: a.message,
+    createdAt: a.createdAt,
+    read: a.is_read,
+  };
 }
 
 // ---- 매핑 ----
@@ -72,18 +109,62 @@ function toPerson(p: BE_Person): TrackedPerson {
     heartRate: 0,
     steps: 0,
     lastUpdated: p.createdAt,
+    phone: p.phoneNumber ?? undefined,
     deviceToken: p.deviceToken,
   };
 }
 function toLocationDto(l: BE_Location): LocationDto {
+  // 서버는 is_fall / is_wandering 만 제공(지오펜스 없음). 배회를 '안전구역 이탈'로
+  // 부르면 오해 → 실제 상태 그대로 라벨링.
+  const zoneLabel = l.is_fall
+    ? 'Fall detected'
+    : l.is_wandering
+      ? 'Wandering detected'
+      : 'Normal';
   return {
-    address: l.address,
-    zoneLabel: l.zoneLabel,
-    inSafeZone: l.inSafeZone,
-    lat: l.abstract.latitude,
-    lng: l.abstract.longitude,
-    updatedAt: l.abstract.updatedAt,
+    address: '—', // 서버가 주소를 제공하지 않음
+    zoneLabel,
+    inSafeZone: !(l.is_fall || l.is_wandering),
+    lat: l.latitude,
+    lng: l.longitude,
+    updatedAt: new Date().toISOString(),
   };
+}
+
+// 위치 데이터가 아직 없으면 서버가 404 를 반환 -> null (지도에서 제외).
+// 개별 위치 조회 실패로 목록 전체가 깨지지 않게 그 외 에러도 null 처리.
+async function fetchLocationOrNull(
+  personId: number | string,
+  signal?: AbortSignal
+): Promise<BE_Location | null> {
+  try {
+    return await http.get<BE_Location>(`/persons/${personId}/location`, undefined, signal);
+  } catch (e) {
+    if (e instanceof HttpError && e.status !== 404) {
+      console.log(`[api] location fetch failed for person ${personId}:`, e.message);
+    }
+    return null;
+  }
+}
+
+// 사람 + 최신 위치 병합. 위치가 있으면 좌표/상태 갱신, 없으면 offline 유지.
+async function toPersonWithLocation(p: BE_Person, signal?: AbortSignal): Promise<TrackedPerson> {
+  const person = toPerson(p);
+  const loc = await fetchLocationOrNull(p.id, signal);
+  if (loc) {
+    const dto = toLocationDto(loc);
+    person.location = {
+      address: dto.address,
+      zoneLabel: dto.zoneLabel,
+      inSafeZone: dto.inSafeZone,
+      lat: dto.lat,
+      lng: dto.lng,
+    };
+    person.status = loc.is_fall || loc.is_wandering ? 'alert' : 'safe';
+    person.flags = { isFall: !!loc.is_fall, isWandering: !!loc.is_wandering };
+    person.lastUpdated = dto.updatedAt;
+  }
+  return person;
 }
 
 const notSupported = (what: string) => Promise.reject(new Error(`Not supported by the server: ${what}`));
@@ -194,14 +275,21 @@ export const backendApi = {
   // 3. 추적 대상
   persons: {
     list: async (signal?: AbortSignal): Promise<TrackedPerson[]> => {
-      const rows = await http.get<BE_Person[]>('/persons', undefined, signal);
-      return rows.map(toPerson);
+      let rows: BE_Person[];
+      try {
+        rows = await http.get<BE_Person[]>('/persons', undefined, signal);
+      } catch (e) {
+        // 서버는 환자가 0명일 때 빈 배열 대신 404 를 반환 -> 빈 목록으로 처리
+        if (e instanceof HttpError && e.status === 404) return [];
+        throw e;
+      }
+      return Promise.all(rows.map((p) => toPersonWithLocation(p, signal)));
     },
     get: async (id: string): Promise<TrackedPerson> => {
       const rows = await http.get<BE_Person[]>('/persons');
       const found = rows.find((p) => String(p.id) === id);
       if (!found) throw new Error(`person_not_found: ${id}`);
-      return toPerson(found);
+      return toPersonWithLocation(found);
     },
     create: async (body: CreatePersonRequest): Promise<TrackedPerson> => {
       // 중복 등록 사전 체크: 같은 기기(deviceToken=app-<MAC>)가 이미 있으면 막음
@@ -221,6 +309,7 @@ export const backendApi = {
       const created = await http.post<BE_Person>('/persons', {
         name: body.name,
         age: body.age,
+        phone_number: body.phone || undefined, // 서버 등록 필드명은 phone_number
         device_mac: body.deviceId,
         guardian_id: cachedGuardianId ?? 1,
         device_token: `app-${body.deviceId}`,
@@ -249,7 +338,11 @@ export const backendApi = {
       Promise.resolve({ battery: 0, heartRate: 0, steps: 0, lastUpdated: new Date().toISOString() }),
     history: async (personId: string, from: string, to: string): Promise<LocationPoint[]> => {
       const res = await http.get<BE_History>(`/persons/${personId}/history`, { from, to });
-      return (res.history ?? []).map((h) => ({ lat: h.latitude, lng: h.longitude, at: h.updatedAt }));
+      return (res.history ?? []).map((h) => ({
+        lat: h.latitude,
+        lng: h.longitude,
+        at: h.updatedAt ?? '', // 서버가 시각을 안 내려줌
+      }));
     },
   },
 
@@ -261,13 +354,27 @@ export const backendApi = {
     remove: (_zoneId: string) => notSupported('deleting a safe zone'),
   },
 
-  // 6. 알림 (서버 목록 API 없음 -> 빈 응답. 실시간은 WebSocket/푸시로)
+  // 6. 알림 — 서버 /alerts 연결. (GET /alerts?limit, unread-count, {id}/read, read-all)
   alerts: {
-    list: (_query: AlertQuery = {}): Promise<AlertListResponse> =>
-      Promise.resolve({ items: [], nextCursor: undefined }),
-    unreadCount: (): Promise<{ count: number }> => Promise.resolve({ count: 0 }),
-    markRead: () => notSupported('marking an alert as read'),
-    markAllRead: async () => {},
+    list: async (query: AlertQuery = {}): Promise<AlertListResponse> => {
+      const rows = await http.get<BE_Alert[]>('/alerts', { limit: query.limit ?? 100 });
+      let items = (rows ?? []).map(toAlertItem);
+      if (query.filter === 'unread') items = items.filter((a) => !a.read);
+      if (query.personId) items = items.filter((a) => a.personId === query.personId);
+      // 서버가 시간 역순으로 준다고 되어 있으나, 방어적으로 재정렬.
+      items.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      return { items, nextCursor: undefined };
+    },
+    unreadCount: async (): Promise<{ count: number }> => {
+      const r = await http.get<BE_UnreadCount>('/alerts/unread-count');
+      return { count: r?.unread_count ?? 0 };
+    },
+    markRead: async (id: string): Promise<void> => {
+      await http.patch(`/alerts/${id}/read`, {});
+    },
+    markAllRead: async (): Promise<void> => {
+      await http.post('/alerts/read-all', {});
+    },
   },
 
   // 7. 푸시 (서버 등록 엔드포인트 미확인 -> no-op)
@@ -279,8 +386,15 @@ export const backendApi = {
   // 8. 대시보드 요약 (persons 목록에서 파생)
   dashboard: {
     summary: async (): Promise<DashboardSummary> => {
-      const rows = await http.get<BE_Person[]>('/persons');
-      return { totalCount: rows.length, safeCount: rows.length, alertCount: 0 };
+      try {
+        const rows = await http.get<BE_Person[]>('/persons');
+        return { totalCount: rows.length, safeCount: rows.length, alertCount: 0 };
+      } catch (e) {
+        // 환자 0명 -> 404 (빈 목록 의미)
+        if (e instanceof HttpError && e.status === 404)
+          return { totalCount: 0, safeCount: 0, alertCount: 0 };
+        throw e;
+      }
     },
   },
 

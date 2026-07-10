@@ -4,7 +4,7 @@
 import { Feather } from '@expo/vector-icons';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { useFocusEffect } from '@react-navigation/native';
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   Pressable,
   RefreshControl,
@@ -40,6 +40,13 @@ export default function HomeScreen({ navigation }: Props) {
     }, [persons.refetch])
   );
 
+  // 당겨서 새로고침 — loading 과 분리(포커스 refetch 로 스피너 여백이 생기지 않도록).
+  const [refreshing, setRefreshing] = useState(false);
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    persons.refetch().finally(() => setRefreshing(false));
+  }, [persons.refetch]);
+
   const people = persons.data ?? [];
   const summary = {
     totalCount: people.length,
@@ -58,7 +65,7 @@ export default function HomeScreen({ navigation }: Props) {
       <View style={styles.header}>
         <View>
           <Text style={styles.greet}>Hello,</Text>
-          <Text style={styles.name}>{(guardian.data?.name ?? 'Guardian')} 👋</Text>
+          <Text style={styles.name}>{guardian.data?.name ?? 'Guardian'}</Text>
         </View>
         <Pressable
           style={styles.bell}
@@ -75,11 +82,11 @@ export default function HomeScreen({ navigation }: Props) {
         <LoadingView />
       ) : (
         <ScrollView
+          style={styles.scroll}
           contentContainerStyle={styles.body}
+          contentInsetAdjustmentBehavior="never"
           showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl refreshing={persons.loading} onRefresh={persons.refetch} />
-          }
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         >
           {/* 3.2 요약 카드 3개 */}
           <View style={styles.summary}>
@@ -147,7 +154,7 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: colors.surface,
     paddingHorizontal: screenPadding,
-    paddingTop: 8,
+    paddingTop: 0,
     paddingBottom: 18,
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -176,6 +183,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.surface,
   },
+  scroll: { flex: 1, backgroundColor: colors.bg },
   body: {
     backgroundColor: colors.bg,
     paddingHorizontal: screenPadding,

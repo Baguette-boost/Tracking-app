@@ -27,6 +27,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'AddPerson'>;
 export default function AddPersonScreen({ navigation }: Props) {
   const [name, setName] = useState('');
   const [age, setAge] = useState('');
+  const [phone, setPhone] = useState('');
   const [deviceId, setDeviceId] = useState('');
   const [bleId, setBleId] = useState(''); // 스캔한 기기의 BLE 핸들 (프로비저닝용)
   const [submitting, setSubmitting] = useState(false);
@@ -45,7 +46,12 @@ export default function AddPersonScreen({ navigation }: Props) {
     setSubmitting(true);
     try {
       // 1) 서버 등록
-      await api.persons.create({ name: name.trim(), age: ageNum, deviceId: deviceId.trim() });
+      await api.persons.create({
+        name: name.trim(),
+        age: ageNum,
+        deviceId: deviceId.trim(),
+        phone: phone.trim() || undefined,
+      });
 
       // 2) 기기에 BLE로 personId/deviceToken 전달 (통신 확인)
       const reg = getLastRegistration();
@@ -109,6 +115,18 @@ export default function AddPersonScreen({ navigation }: Props) {
             placeholderTextColor={colors.textSecondary}
             keyboardType="number-pad"
             maxLength={3}
+          />
+        </Field>
+
+        <Field label="Phone" hint="Optional — used for the Call button">
+          <TextInput
+            style={styles.input}
+            value={phone}
+            onChangeText={(t) => setPhone(t.replace(/[^0-9+\-\s]/g, ''))}
+            placeholder="e.g. 010-1234-5678"
+            placeholderTextColor={colors.textSecondary}
+            keyboardType="phone-pad"
+            maxLength={20}
           />
         </Field>
 

@@ -3,7 +3,8 @@
 // '전체' 필터로 읽은 알림(이력)까지 확인 가능.
 
 import { Feather } from '@expo/vector-icons';
-import { useFocusEffect } from '@react-navigation/native';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   LayoutAnimation,
@@ -23,6 +24,7 @@ import { usePersons } from '../hooks';
 import { useAlerts } from '../hooks';
 import { refreshUnread, unreadStore } from '../state/unread';
 import { colors, radius, screenPadding } from '../theme/tokens';
+import { RootTabParamList } from '../navigation/types';
 import { AlertItem, AlertType } from '../types';
 import { fromNow } from '../utils/relativeTime';
 
@@ -31,6 +33,8 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 }
 
 const typeMeta: Record<AlertType, { icon: keyof typeof Feather.glyphMap; color: string; label: string }> = {
+  wandering: { icon: 'navigation', color: '#F2A03D', label: 'Wandering Detected' },
+  fall_detected: { icon: 'alert-triangle', color: colors.danger, label: 'Fall Detected' },
   zone_exit: { icon: 'log-out', color: colors.danger, label: 'Left Safe Zone' },
   low_battery: { icon: 'battery', color: '#E2A100', label: 'Low Battery' },
   abnormal_hr: { icon: 'heart', color: colors.danger, label: 'Abnormal Heart Rate' },
@@ -40,6 +44,7 @@ const typeMeta: Record<AlertType, { icon: keyof typeof Feather.glyphMap; color: 
 type Filter = 'unread' | 'all';
 
 export default function AlertsScreen() {
+  const navigation = useNavigation<BottomTabNavigationProp<RootTabParamList>>();
   const [filter, setFilter] = useState<Filter>('unread');
   const alerts = useAlerts(filter);
   const persons = usePersons();
@@ -57,19 +62,26 @@ export default function AlertsScreen() {
     }, [alerts.refetch])
   );
 
+  // 당겨서 새로고침 — loading 과 분리(포커스 refetch 스피너 여백 방지).
+  const [refreshing, setRefreshing] = useState(false);
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    alerts.refetch().finally(() => setRefreshing(false));
+  }, [alerts.refetch]);
+
   const nameOf = (id: string) =>
     persons.data?.find((p) => p.id === id)?.name ?? 'Unknown';
 
   const animate = () =>
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
 
-  const handleRead = async (alert: AlertItem) => {
-    if (alert.read && filter === 'all') return; // 이미 읽은 이력 항목은 그대로
-    animate();
-    setItems((prev) => prev.filter((a) => a.id !== alert.id)); // 즉시 사라짐
-    if (!alert.read) unreadStore.decrement(1); // 배지 즉시 감소
-    await api.alerts.markRead(alert.id).catch(() => {});
-    refreshUnread();
+  // 알림 탭 → 읽음 처리 후 지도로 이동(해당 인물 포커스, callout 자동 열림).
+  const handleOpen = (alert: AlertItem) => {
+    if (!alert.read) {
+      unreadStore.decrement(1);
+      api.alerts.markRead(alert.id).catch(() => {}).then(refreshUnread);
+    }
+    navigation.navigate('Map', { focusPersonId: alert.personId });
   };
 
   const handleReadAll = async () => {
@@ -107,11 +119,11 @@ export default function AlertsScreen() {
         />
       ) : (
         <ScrollView
+          style={styles.scroll}
           contentContainerStyle={styles.body}
+          contentInsetAdjustmentBehavior="never"
           showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl refreshing={alerts.loading} onRefresh={alerts.refetch} />
-          }
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         >
           {items.length === 0 && (
             <View style={styles.emptyWrap}>
@@ -127,9 +139,9 @@ export default function AlertsScreen() {
               <Pressable
                 key={a.id}
                 style={[styles.item, !a.read && styles.itemUnread]}
-                onPress={() => handleRead(a)}
+                onPress={() => handleOpen(a)}
                 accessibilityRole="button"
-                accessibilityLabel={`${meta.label} alert, tap to mark as read`}
+                accessibilityLabel={`${meta.label} alert, tap to view on map`}
               >
                 {!a.read && <View style={styles.unreadBar} />}
                 <View style={[styles.iconWrap, { backgroundColor: meta.color + '1A' }]}>
@@ -168,7 +180,7 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.surface },
   header: {
     paddingHorizontal: screenPadding,
-    paddingTop: 8,
+    paddingTop: 0,
     paddingBottom: 14,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
@@ -186,6 +198,7 @@ const styles = StyleSheet.create({
   chipActive: { backgroundColor: colors.primary },
   chipText: { fontSize: 13, fontWeight: '600', color: colors.textSecondary },
   chipTextActive: { color: '#FFFFFF' },
+  scroll: { flex: 1, backgroundColor: colors.bg },
   body: { backgroundColor: colors.bg, padding: screenPadding, flexGrow: 1 },
   emptyWrap: { alignItems: 'center', justifyContent: 'center', marginTop: 60, gap: 10 },
   empty: { textAlign: 'center', color: colors.textSecondary },

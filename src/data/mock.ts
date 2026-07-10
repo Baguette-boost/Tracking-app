@@ -29,6 +29,7 @@ export const people: TrackedPerson[] = [
     heartRate: 92,
     steps: 2140,
     lastUpdated: '2026-06-19T09:41:00+09:00',
+    phone: '01011112222',
   },
   {
     id: '2',
@@ -41,6 +42,7 @@ export const people: TrackedPerson[] = [
     heartRate: 88,
     steps: 1320,
     lastUpdated: '2026-06-19T09:39:00+09:00',
+    phone: '01033334444',
   },
   {
     id: '3',
@@ -53,6 +55,7 @@ export const people: TrackedPerson[] = [
     heartRate: 104,
     steps: 980,
     lastUpdated: '2026-06-19T09:30:00+09:00',
+    phone: '01055556666',
   },
   {
     id: '4',
@@ -65,6 +68,7 @@ export const people: TrackedPerson[] = [
     heartRate: 0,
     steps: 640,
     lastUpdated: '2026-06-19T08:55:00+09:00',
+    phone: '01077778888',
   },
 ];
 

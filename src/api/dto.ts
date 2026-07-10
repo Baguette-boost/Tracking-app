@@ -38,6 +38,7 @@ export interface CreatePersonRequest {
   name: string;
   age: number;
   deviceId: string; // 페어링할 기기 식별자
+  phone?: string; // 대상 연락처 (선택)
 }
 export type UpdatePersonRequest = Partial<Pick<TrackedPerson, 'name' | 'age'>>;
 
