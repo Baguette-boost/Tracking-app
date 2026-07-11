@@ -43,10 +43,14 @@ const WANDER_COLOR = '#F2A03D'; // 배회 = 주황 (낙상 빨강과 구분)
 
 type MarkerLook = { color: string; icon: keyof typeof Feather.glyphMap; label: string };
 
-// 마커 색·아이콘·라벨 (낙상=빨강, 배회=주황, 오프라인=회색, 그 외=초록 Idle)
+// 마커 색·아이콘·라벨. 낙상+배회 동시면 둘 다 라벨에 표기(색은 더 위급한 낙상=빨강).
 function markerLook(p: TrackedPerson): MarkerLook {
-  if (p.flags?.isFall) return { color: colors.danger, icon: 'alert-triangle', label: 'Fall' };
-  if (p.flags?.isWandering) return { color: WANDER_COLOR, icon: 'navigation', label: 'Wandering' };
+  const fall = !!p.flags?.isFall;
+  const wander = !!p.flags?.isWandering;
+  if (fall && wander)
+    return { color: colors.danger, icon: 'alert-triangle', label: 'Fall + Wandering' };
+  if (fall) return { color: colors.danger, icon: 'alert-triangle', label: 'Fall' };
+  if (wander) return { color: WANDER_COLOR, icon: 'navigation', label: 'Wandering' };
   if (p.status === 'alert') return { color: colors.danger, icon: 'alert-triangle', label: 'Alert' };
   if (p.status === 'offline') return { color: colors.textSecondary, icon: 'wifi-off', label: 'Offline' };
   return { color: colors.safe, icon: 'check', label: 'Idle' };
@@ -89,26 +93,34 @@ function PersonMarker({
 function FocusCard({
   person,
   position,
-  detectedAt,
+  times,
   onClose,
   onResolve,
 }: {
   person: TrackedPerson;
   position: LatLng;
-  detectedAt?: string;
+  times?: { fall?: string; wander?: string }; // 낙상/배회 감지 시각(ISO)
   onClose: () => void;
   onResolve: (p: TrackedPerson) => Promise<void>;
 }) {
-  const look = markerLook(person);
   const geoAddr = useReverseGeocode({ lat: position.latitude, lng: position.longitude });
   const addressLine = geoAddr ?? 'Locating address…';
   const coordLine = `${position.latitude.toFixed(5)}, ${position.longitude.toFixed(5)}`;
-  const isEvent = !!(person.flags?.isFall || person.flags?.isWandering);
+  const isFall = !!person.flags?.isFall;
+  const isWander = !!person.flags?.isWandering;
+  const isEvent = isFall || isWander;
   const [resolving, setResolving] = useState(false);
   const doResolve = () => {
     setResolving(true);
     onResolve(person).finally(() => setResolving(false));
   };
+  // 해제 버튼 문구를 실제 동작(활성 상태 전부 해제)과 일치시킨다.
+  const resolveLabel =
+    isFall && isWander
+      ? 'Mark both resolved'
+      : isFall
+        ? 'Mark fall resolved'
+        : 'Mark wandering resolved';
   return (
     <View style={styles.focusCard}>
       <Pressable style={styles.focusClose} onPress={onClose} hitSlop={8} accessibilityLabel="Close">
@@ -122,19 +134,26 @@ function FocusCard({
           <Text style={styles.focusName} numberOfLines={1}>
             {person.name}
           </Text>
-          {isEvent && (
+          {/* 낙상·배회가 동시면 각각 감지 시각을 한 줄씩 표시 */}
+          {isFall && (
             <View style={styles.focusTimeRow}>
-              <Feather name="clock" size={12} color={look.color} />
-              <Text style={[styles.focusTime, { color: look.color }]}>
-                {look.label} · {detectedAt ? fromNow(detectedAt) : 'just now'}
+              <Feather name="clock" size={12} color={colors.dangerText} />
+              <Text style={[styles.focusTime, { color: colors.dangerText }]}>
+                Fall · {times?.fall ? fromNow(times.fall) : 'just now'}
+              </Text>
+            </View>
+          )}
+          {isWander && (
+            <View style={styles.focusTimeRow}>
+              <Feather name="clock" size={12} color={WANDER_COLOR} />
+              <Text style={[styles.focusTime, { color: WANDER_COLOR }]}>
+                Wandering · {times?.wander ? fromNow(times.wander) : 'just now'}
               </Text>
             </View>
           )}
         </View>
-        <View style={[styles.focusStatus, { backgroundColor: look.color }]}>
-          <Feather name={look.icon} size={12} color="#FFFFFF" />
-          <Text style={styles.focusStatusText}>{look.label}</Text>
-        </View>
+        {/* 활성 상태 전부 표시 (낙상 + 배회 동시면 배지 2개) */}
+        <StatusBadge status={person.status} flags={person.flags} />
       </View>
       <View style={styles.focusLoc}>
         <Feather name="map-pin" size={14} color={colors.textSecondary} style={{ marginTop: 1 }} />
@@ -176,9 +195,7 @@ function FocusCard({
           ) : (
             <>
               <Feather name="check-circle" size={17} color={colors.primary} />
-              <Text style={styles.focusResolveText}>
-                {person.flags?.isFall ? 'Mark fall resolved' : 'Mark wandering resolved'}
-              </Text>
+              <Text style={styles.focusResolveText}>{resolveLabel}</Text>
             </>
           )}
         </Pressable>
@@ -319,11 +336,8 @@ export default function MapScreen({ route }: Props) {
   // 하단 상세 카드 대상 (선택된 인물 + 좌표 있을 때)
   const selectedPerson = selectedId ? people.find((p) => p.id === selectedId) : undefined;
   const selectedPos = positionFor(selectedPerson);
-  const selectedAt = selectedPerson?.flags?.isFall
-    ? alertTimes[selectedPerson.id]?.fall
-    : selectedPerson?.flags?.isWandering
-      ? alertTimes[selectedPerson.id]?.wander
-      : undefined;
+  // 낙상·배회 감지 시각을 둘 다 전달(동시 발생 시 각각 표시)
+  const selectedTimes = selectedPerson ? alertTimes[selectedPerson.id] : undefined;
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -396,7 +410,7 @@ export default function MapScreen({ route }: Props) {
         <FocusCard
           person={selectedPerson}
           position={selectedPos}
-          detectedAt={selectedAt}
+          times={selectedTimes}
           onClose={() => setSelectedId(undefined)}
           onResolve={handleResolve}
         />
