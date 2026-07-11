@@ -10,6 +10,7 @@ import {
   AlertQuery,
   CreatePersonRequest,
   CreateZoneRequest,
+  PersonStatusUpdate,
   DashboardSummary,
   GuardianSettings,
   LocationDto,
@@ -57,6 +58,9 @@ export const persons = {
     http.post<TrackedPerson>('/persons', body),
   update: (id: string, body: UpdatePersonRequest) =>
     http.patch<TrackedPerson>(`/persons/${id}`, body),
+  // 낙상/배회 상태 수동 해제(정상화). PATCH /persons/{id}/status
+  normalizeStatus: (id: string, body: PersonStatusUpdate) =>
+    http.patch<void>(`/persons/${id}/status`, body),
   remove: (id: string) => http.delete<void>(`/persons/${id}`),
 };
 

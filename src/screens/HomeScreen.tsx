@@ -32,11 +32,16 @@ export default function HomeScreen({ navigation }: Props) {
   const persons = usePersons();
   const unreadCount = useUnread();
 
-  // 탭으로 돌아올 때 목록·미확인 수 갱신 (등록/삭제 반영)
+  // 화면이 떠 있는 동안 자동 갱신: 진입 시 1회 + 15초마다 폴링(상태 실시간 반영).
   useFocusEffect(
     useCallback(() => {
       refreshUnread();
       persons.refetch();
+      const id = setInterval(() => {
+        refreshUnread();
+        persons.refetch();
+      }, 15000);
+      return () => clearInterval(id);
     }, [persons.refetch])
   );
 

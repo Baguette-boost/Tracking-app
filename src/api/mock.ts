@@ -20,6 +20,7 @@ import {
   LoginRequest,
   RegisterRequest,
   LoginResponse,
+  PersonStatusUpdate,
   PushTokenRequest,
   SafeZone,
   TelemetryDto,
@@ -126,6 +127,14 @@ export const mockApi = {
       const p = findPerson(id);
       Object.assign(p, body);
       return delay(clone(p));
+    },
+    normalizeStatus: (id: string, body: PersonStatusUpdate) => {
+      const p = findPerson(id);
+      if (!p.flags) p.flags = { isFall: false, isWandering: false };
+      if (body.is_fall === false) p.flags.isFall = false;
+      if (body.is_wandering === false) p.flags.isWandering = false;
+      p.status = p.flags.isFall || p.flags.isWandering ? 'alert' : 'safe';
+      return delay<void>(undefined);
     },
     remove: (id: string) => {
       personStore = personStore.filter((x) => x.id !== id);

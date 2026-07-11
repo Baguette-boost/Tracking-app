@@ -6,7 +6,7 @@ import { Feather } from '@expo/vector-icons';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { api } from '../api';
 import Avatar from '../components/Avatar';
@@ -85,23 +85,30 @@ function PersonMarker({
   );
 }
 
-// 지도 하단 상세 카드 — 알림 진입/마커 탭 시 바로 표시(전화 버튼 포함).
+// 지도 하단 상세 카드 — 알림 진입/마커 탭 시 바로 표시(전화 + 상태 해제).
 function FocusCard({
   person,
   position,
   detectedAt,
   onClose,
+  onResolve,
 }: {
   person: TrackedPerson;
   position: LatLng;
   detectedAt?: string;
   onClose: () => void;
+  onResolve: (p: TrackedPerson) => Promise<void>;
 }) {
   const look = markerLook(person);
   const geoAddr = useReverseGeocode({ lat: position.latitude, lng: position.longitude });
   const addressLine = geoAddr ?? 'Locating address…';
   const coordLine = `${position.latitude.toFixed(5)}, ${position.longitude.toFixed(5)}`;
   const isEvent = !!(person.flags?.isFall || person.flags?.isWandering);
+  const [resolving, setResolving] = useState(false);
+  const doResolve = () => {
+    setResolving(true);
+    onResolve(person).finally(() => setResolving(false));
+  };
   return (
     <View style={styles.focusCard}>
       <Pressable style={styles.focusClose} onPress={onClose} hitSlop={8} accessibilityLabel="Close">
@@ -154,6 +161,28 @@ function FocusCard({
           <Text style={styles.focusNoPhoneText}>No phone number saved</Text>
         </View>
       )}
+
+      {/* 낙상/배회 상태일 때만: 확인 후 수동 해제(정상화) */}
+      {isEvent && (
+        <Pressable
+          style={({ pressed }) => [styles.focusResolve, pressed && styles.focusResolvePressed]}
+          onPress={doResolve}
+          disabled={resolving}
+          accessibilityRole="button"
+          accessibilityLabel={`Mark ${person.name} as resolved`}
+        >
+          {resolving ? (
+            <ActivityIndicator size="small" color={colors.primary} />
+          ) : (
+            <>
+              <Feather name="check-circle" size={17} color={colors.primary} />
+              <Text style={styles.focusResolveText}>
+                {person.flags?.isFall ? 'Mark fall resolved' : 'Mark wandering resolved'}
+              </Text>
+            </>
+          )}
+        </Pressable>
+      )}
     </View>
   );
 }
@@ -162,11 +191,30 @@ export default function MapScreen({ route }: Props) {
   const focusId = route.params?.focusPersonId;
   const { data, loading, error, refetch } = usePersons();
 
-  // 탭으로 돌아올 때 목록 갱신 (등록/삭제 반영)
+  // 화면이 떠 있는 동안 자동 갱신: 진입 시 1회 + 15초마다 폴링(낙상/배회 실시간 반영).
+  // 벗어나면 인터벌 정리. (RefreshControl 은 loading 과 분리돼 있어 스피너 여백 없음)
   useFocusEffect(
     useCallback(() => {
       refetch();
+      const id = setInterval(() => refetch(), 15000);
+      return () => clearInterval(id);
     }, [refetch])
+  );
+
+  // 낙상/배회 상태 수동 해제 → 서버 정상화 후 목록 갱신(카드가 Idle 로 반영됨)
+  const handleResolve = useCallback(
+    async (p: TrackedPerson) => {
+      const body: { is_fall?: boolean; is_wandering?: boolean } = {};
+      if (p.flags?.isFall) body.is_fall = false;
+      if (p.flags?.isWandering) body.is_wandering = false;
+      try {
+        await api.persons.normalizeStatus(p.id, body);
+      } catch {
+        // 실패해도 UI 는 갱신 시도
+      }
+      await refetch();
+    },
+    [refetch]
   );
 
   const people = data ?? [];
@@ -350,6 +398,7 @@ export default function MapScreen({ route }: Props) {
           position={selectedPos}
           detectedAt={selectedAt}
           onClose={() => setSelectedId(undefined)}
+          onResolve={handleResolve}
         />
       )}
     </SafeAreaView>
@@ -486,6 +535,20 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bg,
   },
   focusNoPhoneText: { color: colors.textSecondary, fontSize: 14, fontWeight: '600' },
+  focusResolve: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    height: 44,
+    marginTop: 10,
+    borderRadius: radius.button,
+    borderWidth: 1.5,
+    borderColor: colors.primary,
+    backgroundColor: colors.surface,
+  },
+  focusResolvePressed: { backgroundColor: colors.infoBg },
+  focusResolveText: { color: colors.primary, fontSize: 15, fontWeight: '600' },
   mapBanner: {
     position: 'absolute',
     top: 70,

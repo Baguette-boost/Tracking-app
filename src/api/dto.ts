@@ -41,6 +41,11 @@ export interface CreatePersonRequest {
   phone?: string; // 대상 연락처 (선택)
 }
 export type UpdatePersonRequest = Partial<Pick<TrackedPerson, 'name' | 'age'>>;
+// 낙상/배회 상태 수동 해제(정상화). null 미지정 필드는 서버가 건드리지 않음.
+export interface PersonStatusUpdate {
+  is_fall?: boolean;
+  is_wandering?: boolean;
+}
 
 // --- 4. 위치·생체 ---
 export interface LocationDto {

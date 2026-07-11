@@ -22,6 +22,7 @@ import {
   LocationPoint,
   LoginRequest,
   LoginResponse,
+  PersonStatusUpdate,
   RegisterRequest,
   PushTokenRequest,
   SafeZone,
@@ -323,6 +324,10 @@ export const backendApi = {
       return toPerson(created);
     },
     update: (_id: string, _body: UpdatePersonRequest) => notSupported('updating a person'),
+    // 낙상/배회 상태 수동 해제 — PATCH /persons/{id}/status
+    normalizeStatus: async (id: string, body: PersonStatusUpdate): Promise<void> => {
+      await http.patch(`/persons/${id}/status`, body);
+    },
     // 문서엔 없지만 서버에 있을 수 있어 실제로 호출 시도 (없으면 404/405)
     remove: (id: string) => http.delete<void>(`/persons/${id}`),
   },
