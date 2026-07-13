@@ -2,11 +2,19 @@
 // 백엔드 미연결 시 자동으로 목업 어댑터로 응답된다(src/api/index.ts USE_MOCK).
 
 import { api, AlertFilter, DashboardSummary } from '../api';
+import { soundNewAlerts } from '../state/alarm';
 import { AlertItem, Guardian, TrackedPerson } from '../types';
 import { useAsync } from './useAsync';
 
 export function usePersons() {
-  return useAsync<TrackedPerson[]>(() => api.persons.list(), []);
+  return useAsync<TrackedPerson[]>(
+    () =>
+      api.persons.list().then((people) => {
+        soundNewAlerts(people); // 새 낙상/배회 감지 시 경보음(로컬 알림)
+        return people;
+      }),
+    []
+  );
 }
 
 export function useDashboardSummary() {

@@ -16,8 +16,9 @@ export type Look = {
 };
 
 // 배회 = 주황, 낙상 = 빨강, 정상 = 초록
+// WANDER_FG: wanderBg 배지 대비 4.52:1 (WCAG 2.1 AA · 기존 #C77A17는 3.01 ✗)
 const WANDER_BG = '#FDF0DF';
-const WANDER_FG = '#C77A17';
+const WANDER_FG = '#A25E0C';
 
 export const FALL_LOOK: Look = {
   bg: colors.dangerBg,

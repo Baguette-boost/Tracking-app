@@ -20,7 +20,7 @@ Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowBanner: true,
     shouldShowList: true,
-    shouldPlaySound: false,
+    shouldPlaySound: true, // 낙상/배회 경보음 (src/state/alarm.ts 로컬 알림 포함)
     shouldSetBadge: false,
   }),
 });

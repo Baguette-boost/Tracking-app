@@ -6,7 +6,7 @@ import { Feather } from '@expo/vector-icons';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { api } from '../api';
 import Avatar from '../components/Avatar';
@@ -39,7 +39,8 @@ if (Platform.OS !== 'web') {
   }
 }
 
-const WANDER_COLOR = '#F2A03D'; // 배회 = 주황 (낙상 빨강과 구분)
+// 배회 = 주황 (낙상 빨강과 구분). WCAG AA: 마커 흰 글씨/흰 배경 텍스트 모두 5.07:1 (기존 #F2A03D 2.13 ✗)
+const WANDER_COLOR = '#A25E0C';
 
 type MarkerLook = { color: string; icon: keyof typeof Feather.glyphMap; label: string };
 
@@ -110,10 +111,6 @@ function FocusCard({
   const isWander = !!person.flags?.isWandering;
   const isEvent = isFall || isWander;
   const [resolving, setResolving] = useState(false);
-  const doResolve = () => {
-    setResolving(true);
-    onResolve(person).finally(() => setResolving(false));
-  };
   // 해제 버튼 문구를 실제 동작(활성 상태 전부 해제)과 일치시킨다.
   const resolveLabel =
     isFall && isWander
@@ -121,6 +118,25 @@ function FocusCard({
       : isFall
         ? 'Mark fall resolved'
         : 'Mark wandering resolved';
+  // 오탐 해제는 되돌릴 수 없으므로 실행 전 반드시 확인을 받는다.
+  const eventLabel =
+    isFall && isWander ? 'fall and wandering alerts' : isFall ? 'fall alert' : 'wandering alert';
+  const doResolve = () => {
+    Alert.alert(
+      'Mark as resolved?',
+      `This clears the ${eventLabel} for ${person.name} and sets their status back to Idle. Only do this after checking they are safe.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Resolve',
+          onPress: () => {
+            setResolving(true);
+            onResolve(person).finally(() => setResolving(false));
+          },
+        },
+      ]
+    );
+  };
   return (
     <View style={styles.focusCard}>
       <Pressable style={styles.focusClose} onPress={onClose} hitSlop={8} accessibilityLabel="Close">

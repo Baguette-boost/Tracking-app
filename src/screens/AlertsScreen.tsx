@@ -33,10 +33,10 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 }
 
 const typeMeta: Record<AlertType, { icon: keyof typeof Feather.glyphMap; color: string; label: string }> = {
-  wandering: { icon: 'navigation', color: '#F2A03D', label: 'Wandering Detected' },
+  wandering: { icon: 'navigation', color: '#A25E0C', label: 'Wandering Detected' }, // WCAG AA: 5.07:1 (기존 #F2A03D 2.13 ✗)
   fall_detected: { icon: 'alert-triangle', color: colors.danger, label: 'Fall Detected' },
   zone_exit: { icon: 'log-out', color: colors.danger, label: 'Left Safe Zone' },
-  low_battery: { icon: 'battery', color: '#E2A100', label: 'Low Battery' },
+  low_battery: { icon: 'battery', color: '#8A6400', label: 'Low Battery' }, // WCAG AA: 5.38:1 (기존 #E2A100 2.25 ✗)
   abnormal_hr: { icon: 'heart', color: colors.danger, label: 'Abnormal Heart Rate' },
   offline: { icon: 'wifi-off', color: colors.textSecondary, label: 'Offline' },
 };
