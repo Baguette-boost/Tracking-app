@@ -40,7 +40,7 @@ export async function reverseGeocode(lat: number, lng: number): Promise<string |
   const p = (async () => {
     try {
       const res = await fetch(url, {
-        headers: { Accept: 'application/json', 'User-Agent': 'SafeTrack/1.0' },
+        headers: { Accept: 'application/json', 'User-Agent': 'Voost/1.0' },
       });
       if (!res.ok) return null;
       const json: any = await res.json();

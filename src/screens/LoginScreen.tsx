@@ -60,7 +60,7 @@ export default function LoginScreen({
       <View style={styles.body}>
         <View style={styles.brand}>
           <Ionicons name="shield-checkmark" size={44} color={colors.primary} />
-          <Text style={styles.title}>SafeTrack</Text>
+          <Text style={styles.title}>Voost</Text>
           <Text style={styles.sub}>Guardian Log In</Text>
         </View>
 

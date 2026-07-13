@@ -11,7 +11,7 @@ if (process.env.GOOGLE_SERVICES_BASE64 && process.env.GOOGLE_SERVICES_BASE64.tri
 
 module.exports = {
   "expo": {
-    "name": "safetrack",
+    "name": "Voost",
     "slug": "safetrack",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -62,7 +62,7 @@ module.exports = {
           "modes": [
             "central"
           ],
-          "bluetoothAlwaysPermission": "근처 SafeTrack 트래커를 찾아 등록하기 위해 블루투스를 사용합니다."
+          "bluetoothAlwaysPermission": "근처 Voost 트래커를 찾아 등록하기 위해 블루투스를 사용합니다."
         }
       ],
       "./plugins/withNoIosPush",
